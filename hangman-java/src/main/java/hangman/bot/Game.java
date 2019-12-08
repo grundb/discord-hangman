@@ -140,7 +140,7 @@ public class Game {
      */
     public String displayGraphics() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Status: ").append(new String(displayString)).append('\n');
+        sb.append("`Status: ").append(new String(displayString)).append("`\n");
         sb.append("Guessed letters: ").append(guessedLetters).append('\n');
         sb.append("Guessed words: ").append(guessedWords).append('\n');
         sb.append("Fails left: ").append(getFailsAllowed() - nrFails).append('\n');
