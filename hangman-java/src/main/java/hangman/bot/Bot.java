@@ -14,11 +14,12 @@ import java.util.Scanner;
 
 public class Bot {
     private static String BOT_TOKEN;
+    private static String BOT_TOKEN_PATH = "src/data/token.txt";
 
     // throwing LoginException from main method is fine, no point in trying to start if we cant login
     public static void main(String[] args) throws LoginException {
         try {
-            BOT_TOKEN = new Scanner(new File("src/main/java/hangman/bot/token.txt")).nextLine();
+            BOT_TOKEN = new Scanner(new File(BOT_TOKEN_PATH)).nextLine();
         } catch (FileNotFoundException e) {
             System.out.println("Failed to read bot token. Exiting...");
             System.exit(0);

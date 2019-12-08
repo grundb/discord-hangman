@@ -9,7 +9,7 @@ gradle/wrapper/
 .idea/
 
 # Bot token - EXTREMELY IMPORTANT
-/src/main/java/hangman/bot/token.txt
+/src/data/token.txt
 
 # Binary
 *.class
