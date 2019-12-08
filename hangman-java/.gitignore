@@ -1,0 +1,16 @@
+# build files
+build/
+
+# gradle
+.gradle/
+gradle/wrapper/
+
+# IntelliJ project files
+.idea/
+
+# Bot token - EXTREMELY IMPORTANT
+/src/data/token.txt
+
+# Binary
+*.class
+*.jar
