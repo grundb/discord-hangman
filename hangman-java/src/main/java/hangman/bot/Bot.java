@@ -12,7 +12,7 @@ public class Bot extends ListenerAdapter
 {
     enum state {IDLE, SETUP, PLAYING}
 
-    public static final String START_COMMAND = "!start";
+    public static final String START_COMMAND = "!hangman-start";
     public static final String RESET_COMMAND = "!hangman-reset";
 
     state currentState;
@@ -31,6 +31,7 @@ public class Bot extends ListenerAdapter
 
         String[] words = event.getMessage().getContentRaw().toLowerCase().trim().split("\\s+");
         if (words.length > 0 && words[0].equals(RESET_COMMAND)) {
+            event.getChannel().sendMessage("I've been reset!").queue();
             reset();
             return;
         }
@@ -85,7 +86,7 @@ public class Bot extends ListenerAdapter
                 Game.DEFAULT_ALLOWED_FAILS + " of allowed fails followed by a space and a word or sentence to guess.";
 
         gameChannel.sendMessage(
-                "Let's go! Send me a private message with the details, " + startingUser + ".").queue();
+                "Let's go! Send me a private message with the details, " + startingUser.getName() + ".").queue();
         messageUser(startingUser, privateMessage);
     }
 
@@ -109,18 +110,22 @@ public class Bot extends ListenerAdapter
         try {
             if (cleanedContentWords.length < 1) {
                 success = false;
-                errorMessage += "Your message was empty.";
+                errorMessage += "Your message was empty. ";
             } else {
                 fails = Integer.parseInt(cleanedContentWords[0]);
+                if (!(1 <= fails && fails <= Game.DEFAULT_ALLOWED_FAILS)) {
+                    success = false;
+                    errorMessage += "Start with a number in the range 1 to " + Game.DEFAULT_ALLOWED_FAILS + ". ";
+                }
             }
         } catch (NumberFormatException e) {
             success = false;
-            errorMessage += "Start with a number in the range 1 to " + Game.DEFAULT_ALLOWED_FAILS + ".";
+            errorMessage += "Start with a number in the range 1 to " + Game.DEFAULT_ALLOWED_FAILS + ". ";
         }
 
         if (cleanedContentWords.length < 2) {
             success = false;
-            errorMessage += "Failed to identify a guessing sentence or word.";
+            errorMessage += "Failed to identify a guessing sentence or word. ";
         } else {
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i < cleanedContentWords.length; i++) {
