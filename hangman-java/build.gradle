@@ -4,7 +4,7 @@ plugins {
     id'com.github.johnrengelman.shadow' version '4.0.4'
 }
 
-mainClassName = 'hangman.bot.Bot'
+mainClassName = 'hangman.bot.Launcher'
 
 version '1.0'
 def jdaVersion = '4.0.0_39'

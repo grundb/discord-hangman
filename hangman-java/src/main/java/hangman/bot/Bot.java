@@ -1,48 +1,158 @@
 package hangman.bot;
 
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import javax.security.auth.login.LoginException;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Scanner;
+import java.util.Arrays;
 
-public class Bot {
-    private static String BOT_TOKEN;
-    private static String BOT_TOKEN_PATH = "src/data/token.txt";
+import static hangman.bot.Bot.state.*;
 
-    // throwing LoginException from main method is fine, no point in trying to start if we cant login
-    public static void main(String[] args) throws LoginException {
-        try {
-            BOT_TOKEN = new Scanner(new File(BOT_TOKEN_PATH)).nextLine();
-        } catch (FileNotFoundException e) {
-            System.out.println("Failed to read bot token. Exiting...");
-            System.exit(0);
-        }
-        JDA api = new JDABuilder(BOT_TOKEN).addEventListeners(new MyListener()).build();
+public class Bot extends ListenerAdapter
+{
+    enum state {IDLE, SETUP, PLAYING}
+
+    public static final String START_COMMAND = "!hangman-start";
+    public static final String RESET_COMMAND = "!hangman-reset";
+
+    state currentState;
+    Game currentGame;
+    User startingUser;
+    TextChannel gameChannel;
+
+    public Bot() {
+        currentState = IDLE;
     }
 
-    public static class MyListener extends ListenerAdapter
-    {
-        @Override
-        public void onMessageReceived(MessageReceivedEvent event)
-        {
-            if (event.getAuthor().isBot()) return;
-            // We don't want to respond to other bot accounts, including ourself
-            Message message = event.getMessage();
-            String content = message.getContentRaw();
-            // getContentRaw() is an atomic getter
-            // getContentDisplay() is a lazy getter which modifies the content for e.g. console view (strip discord formatting)
-            if (content.equals("!ping"))
-            {
-                MessageChannel channel = event.getChannel();
-                channel.sendMessage("Pong!").queue(); // Important to call .queue() on the RestAction returned by sendMessage(...)
+    @Override
+    public void onMessageReceived(MessageReceivedEvent event) {
+        if ((event.getChannelType() != ChannelType.TEXT ) && (event.getChannelType() != ChannelType.PRIVATE)
+                || event.getAuthor().isBot()) return;
+
+        String[] words = event.getMessage().getContentRaw().toLowerCase().trim().split("\\s+");
+        if (words.length > 0 && words[0].equals(RESET_COMMAND)) {
+            event.getChannel().sendMessage("I've been reset!").queue();
+            reset();
+            return;
+        }
+
+        switch (currentState) {
+            case IDLE:
+                handleStart(event);
+                break;
+            case SETUP:
+                handleSetup(event);
+                break;
+            case PLAYING:
+                handlePlaying(event);
+                break;
+        }
+
+    }
+
+    private void reset() {
+        currentGame = null;
+        startingUser = null;
+        currentState = IDLE;
+        gameChannel = null;
+    }
+
+    private void handlePlaying(MessageReceivedEvent event) {
+        if(event.getChannel() == gameChannel) {
+            if (event.getAuthor() == startingUser) {
+                gameChannel.sendMessage("No cheating, " + startingUser.getName() + "! :angry:").queue();
+                return;
+            }
+            String message = event.getMessage().getContentRaw().trim().toUpperCase();
+            if (message.length() == 1) {
+                currentGame.guessChar(message.charAt(0));
+                gameChannel.sendMessage("You guessed: " + message.charAt(0)).queue();
+            } else {
+                currentGame.guessWord(message);
+                gameChannel.sendMessage("You guessed: " + message).queue();
+            }
+            gameChannel.sendMessage(currentGame.displayGraphics()).queue();
+            if (currentGame.isWon() || currentGame.isLost()) {
+                gameChannel.sendMessage(currentGame.isWon() ? "Game won!" : "Game lost!").queue();
+                reset();
             }
         }
+    }
+
+    private void handleStart(MessageReceivedEvent event) {
+        String firstWord = event.getMessage().getContentRaw().toLowerCase().trim().split("\\s+")[0];
+
+        if (!firstWord.equals(START_COMMAND)) return;
+
+        startingUser = event.getAuthor();
+        gameChannel = event.getTextChannel();
+        currentState = SETUP;
+
+        String privateMessage = "Please respond with a single number in the range 1 to " +
+                Game.DEFAULT_ALLOWED_FAILS + " of allowed fails followed by a space and a word or sentence to guess.";
+
+        gameChannel.sendMessage(
+                "Let's go! Send me a private message with the details, " + startingUser.getName() + ".").queue();
+        messageUser(startingUser, privateMessage);
+    }
+
+    private void handleSetup(MessageReceivedEvent event) {
+        if (!(event.getChannelType() == ChannelType.PRIVATE && event.getAuthor() == startingUser)) return;
+
+        boolean success = true;
+
+        String errorMessage = "Failed to read your message. ";
+        String cleanedContent = event.getMessage().getContentRaw()
+                .trim()
+                .toUpperCase()
+                .replaceAll("\\p{Punct}", "")
+                .replaceAll("\\s+", " ");
+        String[] cleanedContentWords = cleanedContent.split(" ");
+
+        int fails = -1;
+        String guessingSentence = "";
+
+        try {
+            if (cleanedContentWords.length < 1) {
+                success = false;
+                errorMessage += "Your message was empty. ";
+            } else {
+                fails = Integer.parseInt(cleanedContentWords[0]);
+                if (!(1 <= fails && fails <= Game.DEFAULT_ALLOWED_FAILS)) {
+                    success = false;
+                    errorMessage += "Start with a number in the range 1 to " + Game.DEFAULT_ALLOWED_FAILS + ". ";
+                }
+            }
+        } catch (NumberFormatException e) {
+            success = false;
+            errorMessage += "Start with a number in the range 1 to " + Game.DEFAULT_ALLOWED_FAILS + ". ";
+        }
+
+        if (cleanedContentWords.length < 2) {
+            success = false;
+            errorMessage += "Failed to identify a guessing sentence or word. ";
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 1; i < cleanedContentWords.length; i++) {
+                sb.append(cleanedContentWords[i]).append(i == cleanedContentWords.length - 1 ? "" : " ");
+            }
+            guessingSentence = sb.toString();
+        }
+
+        // If setup successful, start game. Else,
+        if(success) {
+            currentGame = new Game(guessingSentence, fails);
+            currentState = PLAYING;
+            gameChannel.sendMessage("Setup complete, game starting...").queue();
+            gameChannel.sendMessage(currentGame.displayGraphics()).queue();
+        } else {
+            messageUser(startingUser, errorMessage);
+        }
+
+    }
+
+    // Send a message to a user without response handling
+    private void messageUser(User u, String message) {
+        u.openPrivateChannel().queue(channel -> channel.sendMessage(message).queue());
     }
 }

@@ -1,4 +1,5 @@
-0
+12
+11
 `                        `
 `                        `
 `                        `
@@ -11,7 +12,6 @@
 `                        `
 `                        `
 `                        `
-1
 `                        `
 `                        `
 `                        `
@@ -24,7 +24,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-2
 `                        `
 `        |               `
 `        |               `
@@ -37,7 +36,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-3
 `        +------------+  `
 `        |               `
 `        |               `
@@ -50,7 +48,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-4
 `        +------------+  `
 `        |            |  `
 `        |            +  `
@@ -63,7 +60,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-5
 `        +------------+  `
 `        |            |  `
 `        |            +  `
@@ -76,7 +72,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-6
 `        +------------+  `
 `        |            |  `
 `        |            +  `
@@ -89,7 +84,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-7
 `        +------------+  `
 `        |            |  `
 `        |            +  `
@@ -102,7 +96,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-8
 `        +------------+  `
 `        |            |  `
 `        |            +  `
@@ -115,7 +108,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-9
 `        +------------+  `
 `        |            |  `
 `        |            +  `
@@ -128,7 +120,6 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
-10
 `        +------------+  `
 `        |            |  `
 `        |            +  `
@@ -141,3 +132,8 @@
 ` XX            XX       `
 `XX              XX      `
 `X                X      `
+
+
+Format: The first line of this file contains the number of lines in each graphics string.
+The second line contains the number of graphics strings. The rest of the file contains
+concatenated graphics strings, and this description.
