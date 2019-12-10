@@ -59,11 +59,17 @@ public class Bot extends ListenerAdapter
 
     private void handlePlaying(MessageReceivedEvent event) {
         if(event.getChannel() == gameChannel) {
+            if (event.getAuthor() == startingUser) {
+                gameChannel.sendMessage("No cheating, " + startingUser.getName() + "! :angry:").queue();
+                return;
+            }
             String message = event.getMessage().getContentRaw().trim().toUpperCase();
             if (message.length() == 1) {
                 currentGame.guessChar(message.charAt(0));
+                gameChannel.sendMessage("You guessed: " + message.charAt(0)).queue();
             } else {
                 currentGame.guessWord(message);
+                gameChannel.sendMessage("You guessed: " + message).queue();
             }
             gameChannel.sendMessage(currentGame.displayGraphics()).queue();
             if (currentGame.isWon() || currentGame.isLost()) {
@@ -91,7 +97,8 @@ public class Bot extends ListenerAdapter
     }
 
     private void handleSetup(MessageReceivedEvent event) {
-        System.out.println("Entered handleSetup");
+        if (!(event.getChannelType() == ChannelType.PRIVATE && event.getAuthor() == startingUser)) return;
+
         boolean success = true;
 
         String errorMessage = "Failed to read your message. ";
@@ -101,8 +108,6 @@ public class Bot extends ListenerAdapter
                 .replaceAll("\\p{Punct}", "")
                 .replaceAll("\\s+", " ");
         String[] cleanedContentWords = cleanedContent.split(" ");
-
-        System.out.println("cleanedContentWords: " + Arrays.toString(cleanedContentWords));
 
         int fails = -1;
         String guessingSentence = "";

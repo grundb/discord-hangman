@@ -68,15 +68,23 @@ public class Game {
             throw new IllegalArgumentException("gameString cannot be empty, failsAllowed must be in range "
                 + "[1, " + DEFAULT_ALLOWED_FAILS + "]");
         }
+
+        guessedLetters = new HashSet<>();
+        guessedWords = new HashSet<>();
+
         nrFails = 0;
-        actualString = gameString.toCharArray();
-        displayString = new char[gameString.length()];
-        Arrays.fill(displayString, '_');
+
         // If we allow n fails, we need n + 2 graphics images
         currentGraphicStrings = GRAPHIC_STRINGS.subList(
                 GRAPHIC_STRINGS.size() - (failsAllowed + 2), GRAPHIC_STRINGS.size());
-        guessedLetters = new HashSet<>();
-        guessedWords = new HashSet<>();
+
+        actualString = gameString.toCharArray();
+        displayString = new char[gameString.length()];
+        Arrays.fill(displayString, '_');
+        for(int i = 0; i < actualString.length; i++) {
+            if(actualString[i] == ' ') displayString[i] = ' ';
+        }
+
     }
 
     /**
@@ -119,6 +127,16 @@ public class Game {
         return success;
     }
 
+    /* Returns a string with spaces between underscores and characters to make length of string and
+    spaces clearly visible */
+    private String formatDisplayString() {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < displayString.length; i++) {
+            sb.append(displayString[i]).append(' ');
+        }
+        return sb.toString();
+    }
+
     /**
      * @return All letters guessed so far as strings.
      */
@@ -140,12 +158,9 @@ public class Game {
      */
     public String displayGraphics() {
         StringBuilder sb = new StringBuilder();
-        sb.append("`Status: ").append(new String(displayString)).append("`\n");
+        sb.append("`Status: ").append(formatDisplayString()).append("`\n");
         sb.append("Guessed letters: ").append(guessedLetters).append('\n');
         sb.append("Guessed words: ").append(guessedWords).append('\n');
-        sb.append("Fails left: ").append(getFailsAllowed() - nrFails).append('\n');
-        sb.append("Game won: " + isWon()).append('\n');
-        sb.append("Game lost: " + isLost()).append('\n');
         return sb.append(currentGraphicStrings.get(nrFails)).toString();
     }
 
