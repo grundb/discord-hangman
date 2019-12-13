@@ -7,21 +7,24 @@ import java.util.*;
 /**
  * Class used to model a hangman game. Once instantiated, the methods for guessing are used
  * to model player guesses and the state of the game, including the current drawing, are queried for
- * using various methods.
+ * using various methods. The games are case-sensitive and support all UTF-8 characters.
  */
 public class Game {
     public static int DEFAULT_ALLOWED_FAILS;
     private static List<String> GRAPHIC_STRINGS;
 
+    // strings are stored as arrays of chars rather than strings for efficiency reasons
     private char[] actualString;
     private char[] displayString;
+
     private int nrFails;
+    private int failsAllowed;
     private List<String> currentGraphicStrings;
     private Set<String> guessedWords;
     private Set<Character> guessedLetters;
 
     /* Initialize list of all graphics strings,
-    and set the default nr of fails allowed to the maximum number possible */
+    and set the default number of fails allowed to the maximum number possible */
     static {
         GRAPHIC_STRINGS = new ArrayList<>();
         try {
@@ -50,7 +53,7 @@ public class Game {
      * @param failsAllowed The number of failed attempts allowed. For example, if failsAllowed = 5,
      *                       the game is lost after 6 incorrect guesses.
      */
-    Game(String gameString, int failsAllowed) {
+    public Game(String gameString, int failsAllowed) {
         initialize(gameString, failsAllowed);
     }
 
@@ -58,7 +61,7 @@ public class Game {
      * Initialize a game with default number of rounds.
      * @param gameString The word to guess
      */
-    Game(String gameString) {
+    public Game(String gameString) {
         initialize(gameString, DEFAULT_ALLOWED_FAILS);
     }
 
@@ -73,6 +76,7 @@ public class Game {
         guessedWords = new HashSet<>();
 
         nrFails = 0;
+        this.failsAllowed = failsAllowed;
 
         // If we allow n fails, we need n + 2 graphics images
         currentGraphicStrings = GRAPHIC_STRINGS.subList(
@@ -85,6 +89,77 @@ public class Game {
             if(actualString[i] == ' ') displayString[i] = ' ';
         }
 
+    }
+
+    /**
+     * @return All letters guessed so far as strings.
+     */
+    public List<String> getGuessedLetters() {
+        List<String> r = new ArrayList<>();
+        for (char c : guessedLetters) r.add(""+c);
+        return r;
+    }
+
+    /**
+     * @return All words guessed so far.
+     */
+    public List<String> getGuessedWords() {
+        return new ArrayList<>(guessedWords);
+    }
+
+    /**
+     * Get the current ascii art string showing the current hangman drawing. Formatted
+     * for fixed-width font display in discord.
+     * @return The ascii art string.
+     */
+    public String getGraphicString() {
+        return currentGraphicStrings.get(nrFails);
+    }
+
+    /**
+     * @return The number of fails allowed from the start in this game.
+     */
+    public int getFailsAllowed() {
+        return failsAllowed; // avoid redundancy, may change later
+    }
+
+    /**
+     * @return The number of available fails left
+     */
+    public int getFailsLeft() {
+        return failsAllowed - nrFails;
+    }
+
+    /**
+     * @return The current string to show the players. Contains the letters guessed so far, and the spaces
+     * (that is, the ascii char ' ') of the actual string provided to start the game. The remaining
+     * characters of the actual string are represented as underscores ('_').
+     */
+    public String getDisplayString() {
+        return new String(displayString);
+    }
+
+    /**
+     * @return True if the game is over and won, false if not. False means the game is either
+     * in progress or over and lost.
+     */
+    public boolean isWon() {
+        boolean won = new String(displayString).equals(new String(actualString));
+        if(won && isLost()) {
+            throw new IllegalStateException("Internal failure: game is both lost and won");
+        }
+        return won;
+    }
+
+    /**
+     * @return True if the game is over and lost, false if the game is over and won or in progress.
+     */
+    public boolean isLost() {
+        boolean lost = nrFails > getFailsAllowed();
+        if (lost && isWon()) {
+            throw new IllegalStateException("Internal failure: game is both lost and won");
+        }
+        return lost;
     }
 
     /**
@@ -127,6 +202,18 @@ public class Game {
         return success;
     }
 
+    /**
+     * @return A string representation of the game to be posted in a discord chat.
+     * Contains formatting for the ascii art and the status for fixed-width font.
+     */
+    public String displayGameState() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("`Status: ").append(formatDisplayString()).append("`\n");
+        sb.append("Guessed letters: ").append(guessedLetters).append('\n');
+        sb.append("Guessed words: ").append(guessedWords).append('\n');
+        return sb.append(getGraphicString()).toString();
+    }
+
     /* Returns a string with spaces between underscores and characters to make length of string and
     spaces clearly visible */
     private String formatDisplayString() {
@@ -135,70 +222,6 @@ public class Game {
             sb.append(displayString[i]).append(' ');
         }
         return sb.toString();
-    }
-
-    /**
-     * @return All letters guessed so far as strings.
-     */
-    public List<String> getGuessedLetters() {
-        List<String> r = new ArrayList<>();
-        for (char c : guessedLetters) r.add(""+c);
-        return r;
-    }
-
-    /**
-     * @return All words guessed so far.
-     */
-    public List<String> getGuessedWords() {
-        return new ArrayList<>(guessedWords);
-    }
-
-    /**
-     * @return A string representation of
-     */
-    public String displayGraphics() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("`Status: ").append(formatDisplayString()).append("`\n");
-        sb.append("Guessed letters: ").append(guessedLetters).append('\n');
-        sb.append("Guessed words: ").append(guessedWords).append('\n');
-        return sb.append(currentGraphicStrings.get(nrFails)).toString();
-    }
-
-    /**
-     * @return True if the game is over and won, false if not. False means the game is either
-     * in progress or over and lost.
-     */
-    public boolean isWon() {
-        boolean won = new String(displayString).equals(new String(actualString));
-        if(won && isLost()) {
-            throw new IllegalStateException("Internal failure: game is both lost and won");
-        }
-        return won;
-    }
-
-    /**
-     * @return True if the game is over and lost, false if the game is over and won or in progress.
-     */
-    public boolean isLost() {
-        boolean lost = nrFails > getFailsAllowed();
-        if (lost && isWon()) {
-            throw new IllegalStateException("Internal failure: game is both lost and won");
-        }
-        return lost;
-    }
-
-    /**
-     * @return The number of fails allowed.
-     */
-    public int getFailsAllowed() {
-        return currentGraphicStrings.size() - 2; // avoid redundancy, may change later
-    }
-
-    /**
-     * @return The number of available fails left
-     */
-    public int getFailsLeft() {
-        return getFailsAllowed() - nrFails;
     }
 
     // Noone should be calling methods if game is over

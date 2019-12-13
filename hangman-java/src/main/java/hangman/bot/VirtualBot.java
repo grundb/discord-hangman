@@ -89,7 +89,7 @@ public class VirtualBot extends ListenerAdapter {
                 currentGame.guessWord(message);
                 gameChannel.sendMessage("You guessed: " + message).queue();
             }
-            gameChannel.sendMessage(currentGame.displayGraphics()).queue();
+            gameChannel.sendMessage(currentGame.displayGameState()).queue();
             if (currentGame.isWon() || currentGame.isLost()) {
                 gameChannel.sendMessage(currentGame.isWon() ? "Game won!" : "Game lost!").queue();
                 reset();
@@ -162,7 +162,7 @@ public class VirtualBot extends ListenerAdapter {
             currentGame = new Game(guessingSentence, fails);
             currentState = PLAYING;
             gameChannel.sendMessage("Setup complete, game starting...").queue();
-            gameChannel.sendMessage(currentGame.displayGraphics()).queue();
+            gameChannel.sendMessage(currentGame.displayGameState()).queue();
         } else {
             messageUser(startingUser, errorMessage);
         }
