@@ -4,30 +4,34 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import java.util.Arrays;
+import static hangman.bot.VirtualBot.state.*;
 
-import static hangman.bot.Bot.state.*;
+public class VirtualBot extends ListenerAdapter {
 
-public class Bot extends ListenerAdapter
-{
     enum state {IDLE, SETUP, PLAYING}
 
     public static final String START_COMMAND = "!hangman-start";
     public static final String RESET_COMMAND = "!hangman-reset";
+    private final Guild guild;
 
     state currentState;
     Game currentGame;
     User startingUser;
     TextChannel gameChannel;
 
-    public Bot() {
+    public VirtualBot(Guild g) {
         currentState = IDLE;
+        guild = g;
     }
 
-    @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
-        if ((event.getChannelType() != ChannelType.TEXT ) && (event.getChannelType() != ChannelType.PRIVATE)
-                || event.getAuthor().isBot()) return;
+    /**
+     * Sends a MessageReceivedEvent for this bot to handle. Individual bots do not implement the
+     * ListenerAdapter interface as this would be inefficient.
+     * @param event The MessageReceivedEvent we want this bot to handle.
+     */
+    public void sendMessageEvent(MessageReceivedEvent event) {
+        if (shouldIgnore(event)) return;
+        checkGuild(event);
 
         String[] words = event.getMessage().getContentRaw().toLowerCase().trim().split("\\s+");
         if (words.length > 0 && words[0].equals(RESET_COMMAND)) {
@@ -48,6 +52,20 @@ public class Bot extends ListenerAdapter
                 break;
         }
 
+    }
+
+    // We should ignore events from bots, and messages from channels other than
+    private boolean shouldIgnore(MessageReceivedEvent event) {
+        return ((event.getChannelType() != ChannelType.TEXT ) && (event.getChannelType() != ChannelType.PRIVATE)
+                || event.getAuthor().isBot());
+    }
+
+    // This bot instance has its own guild, and should not handle events from other guilds
+    private void checkGuild(MessageReceivedEvent event) {
+        if(event.getChannelType() == ChannelType.TEXT && event.getGuild() != guild) {
+            throw new IllegalArgumentException(
+                    "Event from guild " + event.getGuild() + " passed to bot for guild " + guild);
+        }
     }
 
     private void reset() {
