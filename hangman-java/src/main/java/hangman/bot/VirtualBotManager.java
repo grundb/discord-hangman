@@ -62,7 +62,7 @@ public class VirtualBotManager extends ListenerAdapter {
         if (b == null) {
             b = new VirtualBot(g);
             virtualBots.put(g, b);
-            botExecutors.put(b, singleThreadExecutors.get(execIndex++));
+            botExecutors.put(b, singleThreadExecutors.get((execIndex++) % singleThreadExecutors.size()));
         }
         return b;
     }
