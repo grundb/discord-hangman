@@ -47,11 +47,11 @@ public class VirtualBotManager extends ListenerAdapter {
         ChannelType t = event.getChannelType();
         if (t == ChannelType.TEXT) {
             VirtualBot b = safeGetBot(event.getGuild());
-            botExecutors.get(b).submit(() -> b.sendMessageEvent(event));
+            botExecutors.get(b).submit(() -> b.handleMessageEvent(event));
         } else if (t == ChannelType.PRIVATE) {
             for(Guild mutualGuild : event.getAuthor().getMutualGuilds()) {
                 VirtualBot b = safeGetBot(mutualGuild);
-                botExecutors.get(b).submit(() -> b.sendMessageEvent(event));
+                botExecutors.get(b).submit(() -> b.handleMessageEvent(event));
             }
         }
     }

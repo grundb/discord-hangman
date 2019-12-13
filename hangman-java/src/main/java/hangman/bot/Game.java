@@ -10,7 +10,7 @@ import java.util.*;
  * using various methods. The games are case-sensitive and support all UTF-8 characters.
  */
 public class Game {
-    public static int DEFAULT_ALLOWED_FAILS;
+    public static int MAX_ALLOWED_FAILS;
     private static List<String> GRAPHIC_STRINGS;
 
     // strings are stored as arrays of chars rather than strings for efficiency reasons
@@ -39,7 +39,7 @@ public class Game {
                 }
                 GRAPHIC_STRINGS.add(sb.toString());
             }
-            DEFAULT_ALLOWED_FAILS = GRAPHIC_STRINGS.size() - 2; // max number of fails possible
+            MAX_ALLOWED_FAILS = GRAPHIC_STRINGS.size() - 2; // max number of fails possible
         } catch (FileNotFoundException e) {
             // Catastrophic failure
             System.out.println("Failed to find ascii art file. Exiting...");
@@ -62,14 +62,14 @@ public class Game {
      * @param gameString The word to guess
      */
     public Game(String gameString) {
-        initialize(gameString, DEFAULT_ALLOWED_FAILS);
+        initialize(gameString, MAX_ALLOWED_FAILS);
     }
 
     // Set up an instance. Only call in constructor.
     private void initialize(String gameString, int failsAllowed) {
-        if (gameString.equals("") || failsAllowed < 1 || failsAllowed > DEFAULT_ALLOWED_FAILS) {
+        if (gameString.equals("") || failsAllowed < 1 || failsAllowed > MAX_ALLOWED_FAILS) {
             throw new IllegalArgumentException("gameString cannot be empty, failsAllowed must be in range "
-                + "[1, " + DEFAULT_ALLOWED_FAILS + "]");
+                + "[1, " + MAX_ALLOWED_FAILS + "]");
         }
 
         guessedLetters = new HashSet<>();

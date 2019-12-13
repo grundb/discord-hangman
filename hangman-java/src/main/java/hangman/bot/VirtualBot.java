@@ -6,18 +6,25 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import static hangman.bot.VirtualBot.state.*;
 
+/**
+ * This class represents a virtual bot, communicating through the hangman bot but acting as though it was only
+ * working within a single guild (discord server). Upon construction, a guild is supplied to make sure the virtual bot
+ * can detect if it is handling messages from the wrong guild.
+ */
 public class VirtualBot extends ListenerAdapter {
 
+    /* The bot starts in an idle state. The setup state is used when listening for setup details from
+    the user that used the start command. The playing state is used when a game is being played in a channel. */
     enum state {IDLE, SETUP, PLAYING}
 
     public static final String START_COMMAND = "!hangman-start";
     public static final String RESET_COMMAND = "!hangman-reset";
     private final Guild guild;
 
-    state currentState;
-    Game currentGame;
-    User startingUser;
-    TextChannel gameChannel;
+    private state currentState;
+    private Game currentGame;
+    private User startingUser;
+    private TextChannel gameChannel;
 
     public VirtualBot(Guild g) {
         currentState = IDLE;
@@ -25,14 +32,15 @@ public class VirtualBot extends ListenerAdapter {
     }
 
     /**
-     * Sends a MessageReceivedEvent for this bot to handle. Individual bots do not implement the
+     * Sends a MessageReceivedEvent to this bot for it to handle. Individual bots do not implement the
      * ListenerAdapter interface as this would be inefficient.
      * @param event The MessageReceivedEvent we want this bot to handle.
      */
-    public void sendMessageEvent(MessageReceivedEvent event) {
+    public void handleMessageEvent(MessageReceivedEvent event) {
         if (shouldIgnore(event)) return;
         checkGuild(event);
 
+        // At any time, the bot can be reset, either through DM or text channels.
         String[] words = event.getMessage().getContentRaw().toLowerCase().trim().split("\\s+");
         if (words.length > 0 && words[0].equals(RESET_COMMAND)) {
             event.getChannel().sendMessage("I've been reset!").queue();
@@ -68,6 +76,7 @@ public class VirtualBot extends ListenerAdapter {
         }
     }
 
+    // Resets all state of the bot, effectively returning to its starting state after construction
     private void reset() {
         currentGame = null;
         startingUser = null;
@@ -107,7 +116,7 @@ public class VirtualBot extends ListenerAdapter {
         currentState = SETUP;
 
         String privateMessage = "Please respond with a single number in the range 1 to " +
-                Game.DEFAULT_ALLOWED_FAILS + " of allowed fails followed by a space and a word or sentence to guess.";
+                Game.MAX_ALLOWED_FAILS + " of allowed fails followed by a space and a word or sentence to guess.";
 
         gameChannel.sendMessage(
                 "Let's go! Send me a private message with the details, " + startingUser.getName() + ".").queue();
@@ -136,14 +145,14 @@ public class VirtualBot extends ListenerAdapter {
                 errorMessage += "Your message was empty. ";
             } else {
                 fails = Integer.parseInt(cleanedContentWords[0]);
-                if (!(1 <= fails && fails <= Game.DEFAULT_ALLOWED_FAILS)) {
+                if (!(1 <= fails && fails <= Game.MAX_ALLOWED_FAILS)) {
                     success = false;
-                    errorMessage += "Start with a number in the range 1 to " + Game.DEFAULT_ALLOWED_FAILS + ". ";
+                    errorMessage += "Start with a number in the range 1 to " + Game.MAX_ALLOWED_FAILS + ". ";
                 }
             }
         } catch (NumberFormatException e) {
             success = false;
-            errorMessage += "Start with a number in the range 1 to " + Game.DEFAULT_ALLOWED_FAILS + ". ";
+            errorMessage += "Start with a number in the range 1 to " + Game.MAX_ALLOWED_FAILS + ". ";
         }
 
         if (cleanedContentWords.length < 2) {
@@ -157,7 +166,7 @@ public class VirtualBot extends ListenerAdapter {
             guessingSentence = sb.toString();
         }
 
-        // If setup successful, start game. Else,
+        // If setup successful, start game. Else, remain in the setup state with the same user and inform that user.
         if(success) {
             currentGame = new Game(guessingSentence, fails);
             currentState = PLAYING;
