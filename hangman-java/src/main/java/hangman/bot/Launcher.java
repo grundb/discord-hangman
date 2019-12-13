@@ -15,6 +15,9 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+/**
+ * This class initializes a JDA API and creates a virtual bot manager to handle incoming messages.
+ */
 public class Launcher {
     private static String BOT_TOKEN;
     private static String BOT_TOKEN_PATH = "src/data/token.txt";
