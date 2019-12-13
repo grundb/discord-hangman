@@ -5,8 +5,11 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * The virtual bot manager maintains a bot for each guild of the actual bot and distributes any message events
@@ -15,11 +18,24 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class VirtualBotManager extends ListenerAdapter {
 
+    // Keeps track of what executor to assign to next virtual bot
+    private int execIndex;
+
+    private List<ExecutorService> singleThreadExecutors;
+
     // All virtual bots are kept in a hash table, ensures at most one bot per guild
     HashMap<Guild, VirtualBot> virtualBots;
 
+    // Each virtual bot has a corresponding executor service
+    HashMap<VirtualBot, ExecutorService> botExecutors;
+
     VirtualBotManager() {
         virtualBots = new HashMap<>();
+        botExecutors = new HashMap<>();
+        singleThreadExecutors = new ArrayList<>();
+        int cores = Runtime.getRuntime().availableProcessors();
+        for(int i = 0; i < cores - 1; i++) singleThreadExecutors.add(Executors.newSingleThreadExecutor());
+        execIndex = 0;
     }
 
     /**
@@ -30,10 +46,12 @@ public class VirtualBotManager extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         ChannelType t = event.getChannelType();
         if (t == ChannelType.TEXT) {
-            safeGetBot(event.getGuild()).sendMessageEvent(event);
+            VirtualBot b = safeGetBot(event.getGuild());
+            botExecutors.get(b).submit(() -> b.sendMessageEvent(event));
         } else if (t == ChannelType.PRIVATE) {
             for(Guild mutualGuild : event.getAuthor().getMutualGuilds()) {
-                safeGetBot(mutualGuild).sendMessageEvent(event);
+                VirtualBot b = safeGetBot(mutualGuild);
+                botExecutors.get(b).submit(() -> b.sendMessageEvent(event));
             }
         }
     }
@@ -44,6 +62,7 @@ public class VirtualBotManager extends ListenerAdapter {
         if (b == null) {
             b = new VirtualBot(g);
             virtualBots.put(g, b);
+            botExecutors.put(b, singleThreadExecutors.get(execIndex++));
         }
         return b;
     }
