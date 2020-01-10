@@ -32,7 +32,7 @@ public class Launcher {
         }
         JDA api = new JDABuilder(BOT_TOKEN).build();
         api.awaitStatus(JDA.Status.CONNECTED); // Wait for login to complete
-        api.addEventListener(new VirtualBotManager());
+        api.addEventListener(new VirtualBotManager(true));
     }
 
 

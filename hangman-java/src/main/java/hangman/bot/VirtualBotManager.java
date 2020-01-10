@@ -19,28 +19,48 @@ import java.util.concurrent.Executors;
  */
 public class VirtualBotManager extends ListenerAdapter {
 
-    // Keeps track of what executor to assign to next virtual bot
-    private int execIndex;
+    // All virtual bots are kept in a hash table, ensures at most one bot per guild
+    private HashMap<Guild, VirtualBot> virtualBots;
+
+    /* Users may choose to use multiple or a single core, whatever works best.
+    All methods in this class have two behaviours; one for multithreading and one for
+    single thread use. The state below is only used if multithreading is true.
+    It would be a good idea to make this class abstract and implement two subclasses; one for
+    single thread use and one for parallel use. */
+    private boolean multithreading;
+
+    // Each virtual bot has a corresponding executor service, if multithreaded
+    private HashMap<VirtualBot, ExecutorService> botExecutors;
 
     // We maintain n-1 single thread executors, where n is the number of logical threads.
     private List<ExecutorService> singleThreadExecutors;
 
-    // All virtual bots are kept in a hash table, ensures at most one bot per guild
-    HashMap<Guild, VirtualBot> virtualBots;
+    // Keeps track of what executor to assign to next virtual bot
+    private int execIndex;
 
-    // Each virtual bot has a corresponding executor service
-    HashMap<VirtualBot, ExecutorService> botExecutors;
 
     /**
      * Creates a new virtual bot manager. It is not recommended to ever instantiate more than one.
+     * If the multithreading parameter is set to true, the VirtualBotManager will attempt to use one
+     * core per logical thread and split the work between each core.
+     * @param multithreading If true, multiple cores are used. Else, a single thread is used.
      */
-    VirtualBotManager() {
+    VirtualBotManager(boolean multithreading) {
         virtualBots = new HashMap<>();
-        botExecutors = new HashMap<>();
-        singleThreadExecutors = new ArrayList<>();
-        int cores = Runtime.getRuntime().availableProcessors();
-        for(int i = 0; i < cores - 1; i++) singleThreadExecutors.add(Executors.newSingleThreadExecutor());
-        execIndex = 0;
+
+        if(Runtime.getRuntime().availableProcessors() > 1) {
+            this.multithreading = multithreading;
+        } else {
+            this.multithreading = false; // If there is only one logical thread, we shouldnt waste resources
+        }
+
+        if(multithreading) {
+            botExecutors = new HashMap<>();
+            singleThreadExecutors = new ArrayList<>();
+            int cores = Runtime.getRuntime().availableProcessors();
+            for (int i = 0; i < cores - 1; i++) singleThreadExecutors.add(Executors.newSingleThreadExecutor());
+            execIndex = 0;
+        }
     }
 
     /**
@@ -54,22 +74,33 @@ public class VirtualBotManager extends ListenerAdapter {
         ChannelType t = event.getChannelType();
         if (t == ChannelType.TEXT) {
             VirtualBot b = safeGetBot(event.getGuild());
-            botExecutors.get(b).submit(() -> b.handleMessageEvent(event));
+            if(multithreading) {
+                botExecutors.get(b).submit(() -> b.handleMessageEvent(event));
+            } else {
+                b.handleMessageEvent(event);
+            }
         } else if (t == ChannelType.PRIVATE) {
             for(Guild mutualGuild : event.getAuthor().getMutualGuilds()) {
                 VirtualBot b = safeGetBot(mutualGuild);
-                botExecutors.get(b).submit(() -> b.handleMessageEvent(event));
+                if(multithreading) {
+                    botExecutors.get(b).submit(() -> b.handleMessageEvent(event));
+                } else {
+                    b.handleMessageEvent(event);
+                }
             }
         }
     }
 
     // Either sends the bot to the correct virtual bot, or creates a new one if there is no such virtual bot
+    // If multithreading is on and there is no bot, the bot is also assigned to an executor.
     private VirtualBot safeGetBot(Guild g) {
         VirtualBot b = virtualBots.get(g);
         if (b == null) {
             b = new VirtualBot(g);
             virtualBots.put(g, b);
-            botExecutors.put(b, singleThreadExecutors.get((execIndex++) % singleThreadExecutors.size()));
+            if(multithreading) {
+                botExecutors.put(b, singleThreadExecutors.get((execIndex++) % singleThreadExecutors.size()));
+            }
         }
         return b;
     }
