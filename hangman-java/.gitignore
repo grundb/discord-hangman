@@ -7,9 +7,10 @@ gradle/wrapper/
 
 # IntelliJ project files
 .idea/
+*.iml
 
 # Bot token - EXTREMELY IMPORTANT
-/src/data/token.txt
+/src/main/resources/token.txt
 
 # Binary
 *.class
