@@ -20,7 +20,7 @@ import java.util.Scanner;
  */
 public class Launcher {
     private static String BOT_TOKEN;
-    private static String BOT_TOKEN_PATH = "src/data/token.txt";
+    private static String BOT_TOKEN_PATH = "src/main/resources/token.txt";
 
     // throwing these exceptions from main method is fine, no point in trying to start if we cant start
     public static void main(String[] args) throws LoginException, InterruptedException {

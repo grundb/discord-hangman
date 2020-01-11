@@ -28,7 +28,7 @@ public class Game {
     static {
         GRAPHIC_STRINGS = new ArrayList<>();
         try {
-            Scanner sc = new Scanner(new File("src/data/hangman-ascii"));
+            Scanner sc = new Scanner(new File("src/main/resources/hangman-ascii.txt"));
             int height = Integer.parseInt(sc.nextLine());
             int length = Integer.parseInt(sc.nextLine());
             for(int i = 0; i < length; i++) {
