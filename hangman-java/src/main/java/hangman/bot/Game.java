@@ -2,6 +2,7 @@ package hangman.bot;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -10,6 +11,8 @@ import java.util.*;
  * using various methods. The games are case-sensitive and support all UTF-8 characters.
  */
 public class Game {
+    private static String GRAPHICS_PATH = "hangman-ascii.txt";
+
     public static int MAX_ALLOWED_FAILS;
     private static List<String> GRAPHIC_STRINGS;
 
@@ -28,7 +31,8 @@ public class Game {
     static {
         GRAPHIC_STRINGS = new ArrayList<>();
         try {
-            Scanner sc = new Scanner(new File("src/data/hangman-ascii"));
+            InputStream is = Game.class.getClassLoader().getResourceAsStream(GRAPHICS_PATH);
+            Scanner sc = new Scanner(is);
             int height = Integer.parseInt(sc.nextLine());
             int length = Integer.parseInt(sc.nextLine());
             for(int i = 0; i < length; i++) {
@@ -40,7 +44,7 @@ public class Game {
                 GRAPHIC_STRINGS.add(sb.toString());
             }
             MAX_ALLOWED_FAILS = GRAPHIC_STRINGS.size() - 2; // max number of fails possible
-        } catch (FileNotFoundException e) {
+        } catch (NullPointerException e) {
             // Catastrophic failure
             System.out.println("Failed to find ascii art file. Exiting...");
             System.exit(0);

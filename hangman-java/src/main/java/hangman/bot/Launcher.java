@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -20,13 +21,15 @@ import java.util.Scanner;
  */
 public class Launcher {
     private static String BOT_TOKEN;
-    private static String BOT_TOKEN_PATH = "src/data/token.txt";
+    private static String BOT_TOKEN_PATH = "token.txt";
 
     // throwing these exceptions from main method is fine, no point in trying to start if we cant start
     public static void main(String[] args) throws LoginException, InterruptedException {
         try {
-            BOT_TOKEN = new Scanner(new File(BOT_TOKEN_PATH)).nextLine();
-        } catch (FileNotFoundException e) {
+            InputStream is = Launcher.class.getClassLoader().getResourceAsStream(BOT_TOKEN_PATH);
+            Scanner sc = new Scanner(is);
+            BOT_TOKEN = sc.nextLine();
+        } catch (NullPointerException e) {
             System.out.println("Failed to read bot token. Exiting...");
             System.exit(0);
         }
