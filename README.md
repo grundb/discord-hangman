@@ -22,7 +22,7 @@ If you try running the main method of `hangman.bot.Launcher`, you will notice th
 When you want to deploy the bot to a server, such as a Raspberry Pi, the easiest way is using an executable jar. To build one, IntelliJ can be used. Top the right of the window, find the *Gradle* tab, then navigate to *Tasks* > *shadow* > *shadowJar* and double click it. If all works well, this should create the folder `hangman-java/build` which will contain the jar named something like `hangman-java-1.0-all.jar`. This can be executed by running `java -jar hangman-java-1.0-all.jar` from the directory in which it is located. 
 
 ### Setting up the bot to run automatically on Linux
-In case you want the bot to run continously, you can set it up as a *systemd service*. First, add a bash script to the same folder as your jar called `start.sh` and paste the following content:
+In case you want the bot to run continously, you can set it up as a *systemd service*. First, add a bash script to the same folder as your jar file called `start.sh` and paste the following content:
 
 ```
 #!/bin/sh
@@ -30,9 +30,9 @@ jar_name=$(ls <<PATH_TO_BOT_JAR>> | grep jar | head -n 1)
 java -jar     <<PATH_TO_BOT_JAR>>/$jar_name
 ```
 
-Where `<<PATH_TO_BOT_JAR>>` is replaced by the path to the directory containing your JAR file. Then make it executable by running `chmod -ux start.sh`
+Where `<<PATH_TO_BOT_JAR>>` is replaced by the path to the directory containing your JAR file. Then make it executable by running `chmod -ux start.sh`.
 
-Next, we will configure this script to run as a systemd service. To do this, add the following to the file `/etc/systemd/system/discord-hangman.service` (which you will need to create with root privileges):
+Next, we will configure this script to run as a systemd service. To do this, add the following content to the file `/etc/systemd/system/discord-hangman.service` (which you will need to create with root privileges):
 
 ```
 [Unit]
