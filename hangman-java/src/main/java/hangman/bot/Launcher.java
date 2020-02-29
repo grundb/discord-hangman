@@ -2,18 +2,9 @@ package hangman.bot;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.ChannelType;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
-import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**
@@ -37,6 +28,4 @@ public class Launcher {
         api.awaitStatus(JDA.Status.CONNECTED); // Wait for login to complete
         api.addEventListener(new VirtualBotManager(true));
     }
-
-
 }
