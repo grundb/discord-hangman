@@ -42,7 +42,7 @@ Wants=network-online.target systemd-networkd-wait-online.service
 
 [Service]
 ExecStart=<<PATH_TO_BOT_JAR>>/start.sh
-ExecStartPre=/bin/bash -c 'until host discordapp.com; do sleep 1; done'
+ExecStartPre=/bin/bash -c 'until host discord.com; do sleep 1; done'
 Restart=always
 
 [Install]
