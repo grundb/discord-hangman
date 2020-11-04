@@ -24,8 +24,9 @@ public class Launcher {
             System.out.println("Failed to read bot token. Exiting...");
             System.exit(0);
         }
-        JDA api = new JDABuilder(BOT_TOKEN).build();
+        JDA api = JDABuilder.createDefault(BOT_TOKEN)
+                .addEventListeners(new VirtualBotManager(true))
+                .build();
         api.awaitStatus(JDA.Status.CONNECTED); // Wait for login to complete
-        api.addEventListener(new VirtualBotManager(true));
     }
 }
