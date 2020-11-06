@@ -3,15 +3,36 @@ A discord bot that lets users play the hangman game using ASCII art.
 
 Uses the [Java Discord API](https://github.com/DV8FromTheWorld/JDA) for all interacion with discord, and the code is based on their guide to getting started. 
 
-## Setting up the bot
-### Creating a Discord Application 
-Go to the [Discord Developer Portal](https://discordapp.com/developers/applications). Under *Applications*, click *New Application*. Give the app an appropriate name, the specifics are not important. Next, go to the *Bot* tab and click *Add Bot*. Again, give the bot an appropriate name and maybe a profile picture. Next, navigate to the *OAuth2* tab. Here, in the *Scopes* section, check the *bot* box (and no other box). This should make a link appear in the bottom of the scopes view, as well as a *Bot Permissions* view at the bottom of the page. In the Bot Permissions view, we now need to set the appropriate permissions for the bot. This bot needs 3 kinds of permissions:
+## Adding the production bot to your server
+Click [here](https://discord.com/api/oauth2/authorize?client_id=683288807201964032&permissions=68608&scope=bot) and follow the instructions. 
+
+## Using the bot
+Users can interact with the bot in 4 ways. They can start a game, set up a game, guess for a word or letter, and reset the bot.
+
+### Starting a game
+Users can start a game by sending the message `!hangman-start` in a channel of a discord server to which the hangman bot is invited. The bot can only have one active game per server at any one time.
+
+### Configuring a game
+Once a game has been started, the bot will ask the user who gave it the start command to supply a word to guess for, and a number of failed guesses allowed by other players. After successfully configuring a game, the game will start in the channel where the start command was issued.
+
+### Guessing for a word
+When a game is started in a channel, users can guess for words or letters by simply sending a message in the chat. The user who setup the game cannot make guesses.
+
+### Resetting the bot
+At any time, users can message the hangman bot either via DM or a text channel to reset it. To reset the bot, type `!hangman-reset`.
+
+## Setting up development and hosting
+### Creating a Discord Application
+Go to the [Discord Developer Portal](https://discordapp.com/developers/applications). Under *Applications*, click *New Application*. Give the app an appropriate name, the specifics are not important. Next, go to the *Bot* tab and click *Add Bot*. Again, give the bot an appropriate name and maybe a profile picture. 
+
+### Creating a link for servers to add the bot
+In the app in discord developer portal, navigate to the *OAuth2* tab. Here, in the *Scopes* section, check the *bot* box (and no other box). This should make a link appear in the bottom of the scopes view, as well as a *Bot Permissions* view at the bottom of the page. In the Bot Permissions view, we now need to set the appropriate permissions for the bot. This bot needs 3 kinds of permissions:
 
 1. *View Channels* under "General Permissions"
 2. *Send Messages* under "Text Permissions"
 3. *Read Message History* under "Text Permissions"
 
-Check the corresponding boxes. Now, we are ready to add the bot to our server. The link in the scopes box should now contain something like `permissions=xxx`, where `xxx` is not `0`. Click this link, and follow the instructions to add the bot to your server.
+Check the corresponding boxes. Now, we are ready to add the bot to our server. The link in the scopes box should now contain something like `permissions=xxx`, where `xxx` is not `0`. Clicking this link, and following the instructions adds the bot to a server. Should it be different from the link in this README, update this for easy future access. 
 
 ### Setting up the IntelliJ project 
 The easiest way to work with this repo is in IntelliJ IDEA. To set it all up, open IntelliJ and navigate to the *Import Project* view. Select the `hangman-java` folder in the repo and press OK. Next, select *Import project from external model* and pick *Gradle*. Press next. Check the option *Use auto-import*, and pick the option *Use gradle 'wrapper' task configuration*. Provided you have Java 12 installed, everything else can be left as is. Press *Finish* to complete the import.
@@ -50,18 +71,3 @@ WantedBy=multi-user.target
 ```
 
 Where `<<PATH_TO_BOT_JAR>>` is replaced by the path to the directory containing your JAR file. To load the changes, run `sudo systemctl daemon-reload` and then start the service with `sudo systemctl start discord-hangman`. This makes the systemd utility in Linux ensure that the bot is run on startup. If the bot crashes for whatever reason, it is immediately restarted.  Note that the bot will not actually start unless the host `discordapp.com` is accessible. This avoids a bug in which the bot is started before there is a functioning internet connection. To control the service manually, use `sudo systemctl restart discord-hangman`, `sudo systemctl start discord-hangman`, `sudo systemctl stop discord-hangman` and `sudo systemctl status discord-hangman`. To see that it works, try rebooting the system and watch your bot come online.
-
-## Using the bot
-Users can interact with the bot in 4 ways. They can start a game, set up a game, guess for a word or letter, and reset the bot.
-
-### Starting a game
-Users can start a game by sending the message `!hangman-start` in a channel of a discord server to which the hangman bot is invited. The bot can only have one active game per server at any one time.
-
-### Configuring a game
-Once a game has been started, the bot will ask the user who gave it the start command to supply a word to guess for, and a number of failed guesses allowed by other players. After successfully configuring a game, the game will start in the channel where the start command was issued.
-
-### Guessing for a word
-When a game is started in a channel, users can guess for words or letters by simply sending a message in the chat. The user who setup the game cannot make guesses.
-
-### Resetting the bot
-At any time, users can message the hangman bot either via DM or a text channel to reset it. To reset the bot, type `!hangman-reset`.
