@@ -3,7 +3,7 @@ A discord bot that lets users play the hangman game using ASCII art.
 
 Uses the [Java Discord API](https://github.com/DV8FromTheWorld/JDA) for all interacion with discord, and the code is based on their guide to getting started. 
 
-## Adding the production bot to your server
+## Adding the bot to your server
 Click [here](https://discord.com/api/oauth2/authorize?client_id=683288807201964032&permissions=68608&scope=bot) and follow the instructions. 
 
 ## Using the bot
